@@ -1,8 +1,11 @@
 import csv
 import os
+import os.path
 
+debug = True
 
-def read_mapping_files(mapping_dir, mapping_files):
+def read_mapping_files(mapping_dir):
+    mapping_files = os.listdir(mapping_dir)
     mapping = {}
     for name in mapping_files:
         mapping[name] = {}
@@ -15,7 +18,8 @@ def read_mapping_files(mapping_dir, mapping_files):
 
 
 def clean_phenos(pheno_file, mapping):
-    with open(pheno_file) as f, open(pheno_file+".clean.csv","w") as fo:
+    cleaned_pheno_file = '%s.clean.csv' % (pheno_file)
+    with open(pheno_file) as f, open(cleaned_pheno_file,"w") as fo:
         r = csv.reader(f, delimiter=';')
         w = csv.writer(fo, delimiter=';')
         # header line holds the phenotype names
@@ -31,9 +35,18 @@ def clean_phenos(pheno_file, mapping):
                     out.append(v.lower())
             w.writerow(out)
 
+    if debug:
+        print 'Saved cleaned phenotypes in file <<%s>>' % (cleaned_pheno_file)
             
 if __name__ == "__main__":
-    mapping_dir = "mapping"
-    pheno_file = "../data/phenotypes/phenotypes_201604281702.csv"
-    mapping = read_mapping_files(mapping_dir, os.listdir(mapping_dir))
+    data_dir            = '../../data/'
+    data_dir_genotype   = '%s%sgenotypes' % (data_dir,os.path.sep)
+    data_dir_phenotype  = '%s%sphenotypes' % (data_dir,os.path.sep)
+    data_dir_annotation = '%s%sannotation' % (data_dir,os.path.sep)
+    results_dir         = '../results/'
+    
+    mapping_dir         = "mapping"
+    pheno_file          = "%s%sphenotypes_201604281702.csv" % (data_dir_phenotype,os.path.sep)
+
+    mapping = read_mapping_files(mapping_dir)
     clean_phenos(pheno_file, mapping)
