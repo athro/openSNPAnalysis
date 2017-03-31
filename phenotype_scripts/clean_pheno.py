@@ -43,7 +43,6 @@ if __name__ == "__main__":
     data_dir_genotype   = '%s%sgenotypes' % (data_dir,os.path.sep)
     data_dir_phenotype  = '%s%sphenotypes' % (data_dir,os.path.sep)
     data_dir_annotation = '%s%sannotation' % (data_dir,os.path.sep)
-    results_dir         = '../results/'
     
     mapping_dir         = "mapping"
     pheno_file          = "%s%sphenotypes_201604281702.csv" % (data_dir_phenotype,os.path.sep)
