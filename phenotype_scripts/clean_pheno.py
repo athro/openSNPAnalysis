@@ -19,7 +19,7 @@ def read_mapping_files(mapping_dir):
 
 def clean_phenos(pheno_file, mapping):
     cleaned_pheno_file = '%s.clean.csv' % (pheno_file)
-    with open(pheno_file) as f, open(cleaned_pheno_file,"w") as fo:
+    with open(pheno_file, encoding="utf-8") as f, open(cleaned_pheno_file,"w", encoding="utf-8") as fo:
         r = csv.reader(f, delimiter=';')
         w = csv.writer(fo, delimiter=';')
         # header line holds the phenotype names
