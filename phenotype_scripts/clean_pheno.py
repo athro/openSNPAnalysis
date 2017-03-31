@@ -36,7 +36,7 @@ def clean_phenos(pheno_file, mapping):
             w.writerow(out)
 
     if debug:
-        print 'Saved cleaned phenotypes in file <<%s>>' % (cleaned_pheno_file)
+        print('Saved cleaned phenotypes in file <<%s>>') % (cleaned_pheno_file,)
             
 if __name__ == "__main__":
     data_dir            = '../../data/'
