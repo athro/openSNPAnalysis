@@ -2,7 +2,12 @@ import csv
 import sys
 import os.path
 
-debug = False
+debug = True
+if debug:
+    # andreas is lazy
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
+    pprint = pp.pprint
 
 def incHash(theHash,theKey):
     try:
@@ -33,7 +38,7 @@ def get_vals(pheno_num,pheno_file):
         for k in sorted(d.keys()):
             # after having problems with unicode again
             print('%s' % (k.encode(),) + ';')
-
+    
         # # why not:
         # # without count
         # print(';\n'.join(sorted(count.keys())))
