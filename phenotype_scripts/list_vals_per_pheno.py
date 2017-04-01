@@ -31,13 +31,14 @@ def get_vals(pheno_num,pheno_file):
             d[row[pheno_num].lower()] = 1
             incHash(count,row[pheno_num].lower())
         for k in sorted(d.keys()):
-            print(k + ';')
+            # after having problems with unicode again
+            print('%s' % (k.encode(),) + ';')
 
         # # why not:
         # # without count
         # print(';\n'.join(sorted(count.keys())))
         # # with count
-        # print(';\n'.join(map(lambda x: '%s:%s' % (x[0],x[1]),sorted(zip(count.keys(),count.values())))))
+        # print(';\n'.join(map(lambda x: '%s:%s' % (x[0].encode(),x[1]),sorted(zip(count.keys(),count.values())))))
         # # is that bad style because of map and lambda?
         
     
@@ -48,7 +49,8 @@ if __name__ == "__main__":
     data_dir_phenotype  = '%s%sphenotypes' % (data_dir,os.path.sep)
     data_dir_annotation = '%s%sannotation' % (data_dir,os.path.sep)
 
-    pheno_file          = "%s%sphenotypes_201604281702.csv" % (data_dir_phenotype,os.path.sep)
+    #pheno_file          = "%s%sphenotypes_201604281702.csv" % (data_dir_phenotype,os.path.sep)
+    pheno_file          = "%s%sphenotypes_201604281702.csv.clean.csv" % (data_dir_phenotype,os.path.sep)
 
     pheno_num = int(sys.argv[1])
     get_vals(pheno_num,pheno_file)
