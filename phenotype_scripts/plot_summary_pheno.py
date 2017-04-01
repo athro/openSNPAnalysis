@@ -1,13 +1,16 @@
 import matplotlib.pyplot as plt
 import csv
 import sys
+import os.path
+
+debug = True
 
 min_thresh = 250
 label_length = 35
 
 def read_pheno(filename):
     results = {}
-    with open(filename) as f:
+    with open(filename, encoding="utf-8") as f:
         r = csv.reader(f, delimiter=';')
         # header line holds the phenotype names
         names = next(r)
@@ -46,8 +49,17 @@ def plot_bar(name, vals, outdir):
             
 
 if __name__ == "__main__":
-    data = read_pheno("../data/phenotypes/phenotypes_201604281702.csv.clean.csv")
-    outdir = "../results/"
+    data_dir            = '..'+os.path.sep+'..'+os.path.sep+'data' 
+    data_dir_genotype   = '%s%sgenotypes' % (data_dir,os.path.sep)
+    data_dir_phenotype  = '%s%sphenotypes' % (data_dir,os.path.sep)
+    data_dir_annotation = '%s%sannotation' % (data_dir,os.path.sep)
+    data_file           = 'phenotypes_201604281702.csv.clean.csv'
+
+    outdir = '..'+os.path.sep+'..'+os.path.sep+'results'+os.path.sep
+    print ("%s%s%s" % (data_dir_phenotype,os.path.sep,data_file))
+    data = read_pheno("%s%s%s" % (data_dir_phenotype,os.path.sep,data_file))
     for name, vals in data.items():
+        if debug:
+            print('Processing <<%s>>' % (name))
         plot_bar(name, vals, outdir)
 
