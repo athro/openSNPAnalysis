@@ -9,10 +9,14 @@ def read_mapping_files(mapping_dir):
     mapping = {}
     for name in mapping_files:
         mapping[name] = {}
-        with open(mapping_dir+"/"+name) as f:
+        with open(mapping_dir+"/"+name, encoding='utf-8') as f:
             mapping[name]['-'] = '-'
-            for line in f:
-                [old,new] = line.strip().split(';',2)
+            r = csv.reader(f,delimiter=';')
+            for row in r:
+                [old, new] = row
+                # get rid of tabs etc within the values
+                old = ' '.join(old.strip().split())
+                new = ' '.join(new.strip().split())
                 mapping[name][old] = new
     return mapping
 
@@ -29,10 +33,11 @@ def clean_phenos(pheno_file, mapping):
         for row in r:
             out = []
             for n,v in zip(names, row):
+                v = ' '.join(v.strip().split()).lower()
                 if n in mapping:
-                    out.append(mapping[n][v.lower()])
+                    out.append(mapping[n][v])
                 else:
-                    out.append(v.lower())
+                    out.append(v)
             w.writerow(out)
 
     if debug:
