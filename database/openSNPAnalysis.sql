@@ -12,9 +12,11 @@ DROP TABLE IF EXISTS `openSNPAnalysis`.`phenotype` ;
 
 CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`phenotype` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `name` VARCHAR(45) NOT NULL ,
+  `name` VARCHAR(100) NOT NULL ,
   PRIMARY KEY (`id`) )
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_bin;
 
 
 -- -----------------------------------------------------
@@ -29,17 +31,17 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `openSNPAnalysis`.`phenotype_values`
+-- Table `openSNPAnalysis`.`phenotype_value`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `openSNPAnalysis`.`phenotype_values` ;
+DROP TABLE IF EXISTS `openSNPAnalysis`.`phenotype_value` ;
 
-CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`phenotype_values` (
+CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`phenotype_value` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `id_pheno` INT NOT NULL ,
-  `value` VARCHAR(200) NOT NULL ,
+  `value` VARCHAR(400) NOT NULL ,
   PRIMARY KEY (`id`) ,
-  INDEX `pheno_value_pheno` (`id_pheno` ASC) ,
-  CONSTRAINT `pheno_value_pheno`
+  INDEX `pheno_pheno_value` (`id_pheno` ASC) ,
+  CONSTRAINT `pheno_pheno_value`
     FOREIGN KEY (`id_pheno` )
     REFERENCES `openSNPAnalysis`.`phenotype` (`id` )
     ON DELETE NO ACTION
@@ -48,31 +50,31 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `openSNPAnalysis`.`pheno-user`
+-- Table `openSNPAnalysis`.`pheno_user`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `openSNPAnalysis`.`pheno-user` ;
+DROP TABLE IF EXISTS `openSNPAnalysis`.`pheno_user` ;
 
-CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`pheno-user` (
+CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`pheno_user` (
   `id_pheno` INT NOT NULL ,
   `id_user` INT NOT NULL ,
   `id_phenotype_value` INT NOT NULL ,
-  INDEX `pheno_pheno` (`id_pheno` ASC) ,
-  INDEX `pheno_user` (`id_user` ASC) ,
+  INDEX `pheno_pheno_f` (`id_pheno` ASC) ,
+  INDEX `pheno_user_f` (`id_user` ASC) ,
   PRIMARY KEY (`id_pheno`, `id_user`) ,
-  INDEX `pheno_value` (`id_phenotype_value` ASC) ,
-  CONSTRAINT `pheno_pheno`
+  INDEX `pheno_value_f` (`id_phenotype_value` ASC) ,
+  CONSTRAINT `pheno_pheno_f`
     FOREIGN KEY (`id_pheno` )
     REFERENCES `openSNPAnalysis`.`phenotype` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `pheno_user`
+  CONSTRAINT `pheno_user_f`
     FOREIGN KEY (`id_user` )
     REFERENCES `openSNPAnalysis`.`user` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `pheno_value`
+  CONSTRAINT `pheno_value_f`
     FOREIGN KEY (`id_phenotype_value` )
-    REFERENCES `openSNPAnalysis`.`phenotype_values` (`id` )
+    REFERENCES `openSNPAnalysis`.`phenotype_value` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -99,7 +101,7 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `openSNPAnalysis`.`allele` ;
 
 CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`allele` (
-  `id` INT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT ,
   `allele1` CHAR NOT NULL ,
   `allele2` CHAR NULL ,
   PRIMARY KEY (`id`) )
@@ -112,7 +114,7 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `openSNPAnalysis`.`geno_method` ;
 
 CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`geno_method` (
-  `id` INT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT ,
   `name` VARCHAR(45) NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = InnoDB;
@@ -206,7 +208,19 @@ CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`snpedia` (
   `id_snp` INT NOT NULL ,
   `id_allele` INT NOT NULL ,
   `summary` VARCHAR(200) NULL ,
-  PRIMARY KEY (`id`) )
+  PRIMARY KEY (`id`) ,
+  INDEX `snpedia_snp` (`id_snp` ASC) ,
+  INDEX `snpedia_allele` (`id_allele` ASC) ,
+  CONSTRAINT `snpedia_snp`
+    FOREIGN KEY (`id_snp` )
+    REFERENCES `openSNPAnalysis`.`snp` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `snpedia_allele`
+    FOREIGN KEY (`id_allele` )
+    REFERENCES `openSNPAnalysis`.`allele` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
