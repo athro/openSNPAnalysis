@@ -38,7 +38,7 @@ get_fh["gzip"] = open_gzip
 get_fh["plain"] = open
 
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     directory = '../../data/genotypes/'
     files = os.listdir(directory)
     for filename in files:
