@@ -2,31 +2,98 @@ import csv
 import sys
 import os.path
 
+import os
+import glob
+import re
+import compress
+
 debug = True
 
-def read_23andme(file_name):
-    ret_val = None
-    if os.path.exists(file_name):
-        with open(file_name, 'r') as fh:
-            r = csv.reader((row for row in fh if not row.startswith('#')),delimiter='\t')
-            ret_val = map(lambda x: x[:-1]+list(x[-1])+[x],list(r))
-            # may be wrong number of arguments?
+file_re = re.compile('user(\d+)\_file(\d+)\_yearofbirth\_(\w+)\_sex\_(\w+)\.(\S+)\.txt')
 
-            not_matching = filter(lambda x: len(x) != 6, ret_val)
-            if not_matching:
-                print('Error in file <<%s>>' % (file_name,))
-                if debug:
-                    print('lenerrors   = %s' % (len(not_matching)))
-                    print('lenerrors[:10] = %s' % (not_matching[:10]))
-            
-        fh.close()
-        if debug:
-            print('The 10 of %s first entries in <<%s>> are:' % (len(ret_val),file_name))
-            print(ret_val[:10])
+def load_mapping(mapping_dir,mapping_name):
+    mapping_file = '%s%s%s' % (mapping_dir,os.path.sep,mapping_name)
+    mapping = {}
+    if os.path.exists(mapping_file):
+        with open(mapping_file) as fh:
+            mappings_raw = fh.readlines()
+        for line in mappings_raw:
+            (fromM,toM) = line.strip().split(';')
+            mapping[fromM] = toM
+    return mapping
+        
+def snpify_line(a_line,mappings):
+    #remove flancking whitepaces
+    a_line = a_line.strip()
+    #remove overly user of """
+    a_line = a_line.replace('"','')
 
+    # do not use empty lines
+    if a_line:
+    
+        # split by using whitespacce
+        splitted = a_line.split()
+        # try with comma
+        if len(splitted)<=1:
+            splitted = a_line.split(',')
+
+        # if alleles where one single string
+        if len(splitted[-1]) == 2:
+            splitted = splitted[:-1]+[splitted[-1][0],splitted[-1][1]]
+
+        # save a lttle bit of length checking
+        len_splitted = len(splitted)
+        # translate chromosome and print error if chromosome is 0 or something unkown
+        chromosome = None 
+        if len_splitted >= 4 and len_splitted <= 5:
+            try:
+                chromosome = mappings['chromosome'][splitted[1]]
+            except:
+                print('Error on line:\n%s' % (a_line,))
+        else:
+            print('Problems?: ', splitted)
+
+        snp_data = [splitted[0],chromosome]+splitted[2:]
+
+        return snp_data
     else:
-        print('The file <<%s>> does not exits' % (file_name,))
-    return ret_val
+        return None
+                
+
+def read_snp_file(file_handle,mappings):
+    snp_data = []
+    with file_handle:
+        data = file_handle.readlines()
+    for line in data:
+        if isinstance(line,(bytes, bytearray)):
+            line = line.decode().strip()        
+        if not line.startswith('#') and not line.startswith('RSID'):
+            snp_line_data = snpify_line(line,mappings)
+            if snp_line_data:
+                snp_data.append(snp_line_data)
+    print('Loaded %s snps' % (len(snp_data),))
+    print('-'*80)
+    return snp_data
+    #file_handle.seek(0)
+
+
+def read_snps_by_user(userID,data_dir_genotype,mappings):
+    if os.path.exists(data_dir_genotype):
+        potential_file_names = glob.glob('%s%suser%s_*.txt' % (data_dir_genotype,os.path.sep,userID))
+        potential_file_names = [k for k in potential_file_names if not ('vcf.' in k) and not ('.IYG.' in k)]
+        if potential_file_names:
+            #print(potential_file_names)
+            for pot_file in potential_file_names:
+                print(pot_file)
+                with compress.compress_open(pot_file) as fh:
+                    snpData = read_snp_file(fh,mappings)
+        else:
+            print('No such user=<<%s>>' % (userID,))
+                    
+    else:
+        print('The directory <<%s>> does not exits' % (data_dir_genotype,))
+        
+    
 
 
 if __name__ == '__main__':
@@ -34,7 +101,16 @@ if __name__ == '__main__':
     data_dir_genotype   = '%s%sgenotypes' % (data_dir,os.path.sep)
     data_dir_phenotype  = '%s%sphenotypes' % (data_dir,os.path.sep)
     data_dir_annotation = '%s%sannotation' % (data_dir,os.path.sep)
-
-    example_file = '%s%suser972_file483_yearofbirth_unknown_sex_unknown.23andme.txt' % (data_dir_genotype,os.path.sep)
+    mapping_dir         = "mapping"
     
-    read_23andme(example_file)
+    example_file1 = '%s%suser972_file483_yearofbirth_unknown_sex_unknown.23andme.txt' % (data_dir_genotype,os.path.sep)
+    example_file2 = '%s%suser4468_file3062_yearofbirth_unknown_sex_unknown.ancestry.txt' % (data_dir_genotype,os.path.sep)
+    #read_23andme(example_file1)
+    # read_ancestry(example_file2)
+    mappings = {}
+    mappings['chromosome'] = load_mapping(mapping_dir,'chromosome')
+    #for i in [125,881,1259]:
+    #for i in [1259]:
+    for i in range(5000):
+        read_snps_by_user(i,data_dir_genotype,mappings)
+
