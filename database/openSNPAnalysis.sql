@@ -121,6 +121,32 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `openSNPAnalysis`.`genotype_file`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `openSNPAnalysis`.`genotype_file` ;
+
+CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`genotype_file` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
+  `filename` VARCHAR(45) NOT NULL ,
+  `id_user` INT NOT NULL ,
+  `id_method` INT NOT NULL ,
+  PRIMARY KEY (`id`) ,
+  INDEX `file_user` (`id_user` ASC) ,
+  INDEX `file_method` (`id_method` ASC) ,
+  CONSTRAINT `file_user`
+    FOREIGN KEY (`id_user` )
+    REFERENCES `openSNPAnalysis`.`user` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `file_method`
+    FOREIGN KEY (`id_method` )
+    REFERENCES `openSNPAnalysis`.`geno_method` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `openSNPAnalysis`.`genotype`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `openSNPAnalysis`.`genotype` ;
@@ -128,13 +154,11 @@ DROP TABLE IF EXISTS `openSNPAnalysis`.`genotype` ;
 CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`genotype` (
   `id_snp` INT NOT NULL ,
   `id_allele` INT NOT NULL ,
-  `id_user` INT NOT NULL ,
-  `id_method` INT NOT NULL ,
-  PRIMARY KEY (`id_snp`, `id_allele`, `id_user`, `id_method`) ,
+  `id_genotype_file` INT NOT NULL ,
+  PRIMARY KEY (`id_snp`, `id_allele`, `id_genotype_file`) ,
   INDEX `geno_snp` (`id_snp` ASC) ,
   INDEX `geno_allele` (`id_allele` ASC) ,
-  INDEX `geno_user` (`id_user` ASC) ,
-  INDEX `geno_method` (`id_method` ASC) ,
+  INDEX `geno_geno_file` (`id_genotype_file` ASC) ,
   CONSTRAINT `geno_snp`
     FOREIGN KEY (`id_snp` )
     REFERENCES `openSNPAnalysis`.`snp` (`id` )
@@ -145,14 +169,9 @@ CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`genotype` (
     REFERENCES `openSNPAnalysis`.`allele` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `geno_user`
-    FOREIGN KEY (`id_user` )
-    REFERENCES `openSNPAnalysis`.`user` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `geno_method`
-    FOREIGN KEY (`id_method` )
-    REFERENCES `openSNPAnalysis`.`geno_method` (`id` )
+  CONSTRAINT `geno_geno_file`
+    FOREIGN KEY (`id_genotype_file` )
+    REFERENCES `openSNPAnalysis`.`genotype_file` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

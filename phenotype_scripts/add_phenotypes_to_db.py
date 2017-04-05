@@ -56,9 +56,9 @@ def insert_pheno_users(db, users_vals, pheno_names, pheno_db_ids):
         for (pheno_name, val) in zip(pheno_names, users_vals[user_id]):
             if val == '-' or pheno_name in phenotypes_to_avoid:
                 continue # don't bother with null values
-            print(select_pheno_val_query, pheno_name, id_lookup[pheno_name], val)
+            #print(select_pheno_val_query, pheno_name, id_lookup[pheno_name], val)
             [val_id] = db_utils.db_select_one(db, select_pheno_val_query, (id_lookup[pheno_name], val)) #should really check ok 
-            print(user_id, val_id, pheno_name)
+            #print(user_id, val_id, pheno_name)
             db_utils.db_insert_no_auto_id(db, insert_pheno_user_query, (id_lookup[pheno_name], user_id, val_id)) 
 
 
@@ -93,8 +93,10 @@ def add_phenotypes(db, filename):
             phenos = zip(pheno_names, row[1:])
             for (name, val) in phenos:
                 pheno_vals[name][val] = 0
-                
+
+        print("Inserting values")
         insert_phenotype_values(db, pheno_vals, pheno_names, pheno_db_ids)
+        print("Inserting connections")
         insert_pheno_users(db, users_vals, pheno_names, pheno_db_ids)
 
 
