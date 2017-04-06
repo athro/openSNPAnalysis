@@ -62,15 +62,22 @@ def snpify_line(a_line,mappings):
 
 def read_snp_file(file_handle,mappings):
     snp_data = []
+    open_possible = False
     with file_handle:
-        data = file_handle.readlines()
+        try:
+            data = file_handle.readlines()
+        except Exception as e:
+        #except:
+            print('Could not read in data! Exception: %s' % (e,))
+        finally:
+            data = []
     for line in data:
         if isinstance(line,(bytes, bytearray)):
             line = line.decode().strip()        
         if not line.startswith('#') and not line.startswith('RSID'):
             snp_line_data = snpify_line(line,mappings)
-            if snp_line_data:
-                snp_data.append(snp_line_data)
+        if snp_line_data:
+            snp_data.append(snp_line_data)
     print('Loaded %s snps' % (len(snp_data),))
     print('-'*80)
     return snp_data
@@ -110,7 +117,7 @@ if __name__ == '__main__':
     mappings = {}
     mappings['chromosome'] = load_mapping(mapping_dir,'chromosome')
     #for i in [125,881,1259]:
-    #for i in [1259]:
-    for i in range(5000):
+    for i in [1111,850]:
+    #for i in range(5000):
         read_snps_by_user(i,data_dir_genotype,mappings)
 
