@@ -122,7 +122,7 @@ if __name__ == '__main__':
     mappings = {}
     mappings['chromosome'] = load_mapping(mapping_dir,'chromosome')
     # test special
-    for i in [1497,125,881,1259,1111,850]:
+    #for i in [1497,125,881,1259,1111,850]:
     # test all
     #for i in range(6000):
     # test not tested yet
