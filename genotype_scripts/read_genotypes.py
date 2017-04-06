@@ -69,15 +69,14 @@ def read_snp_file(file_handle,mappings):
         except Exception as e:
         #except:
             print('Could not read in data! Exception: %s' % (e,))
-        finally:
             data = []
     for line in data:
         if isinstance(line,(bytes, bytearray)):
             line = line.decode().strip()        
         if not line.startswith('#') and not line.startswith('RSID'):
             snp_line_data = snpify_line(line,mappings)
-        if snp_line_data:
-            snp_data.append(snp_line_data)
+            if snp_line_data:
+                snp_data.append(snp_line_data)
     print('Loaded %s snps' % (len(snp_data),))
     print('-'*80)
     return snp_data
@@ -116,8 +115,9 @@ if __name__ == '__main__':
     # read_ancestry(example_file2)
     mappings = {}
     mappings['chromosome'] = load_mapping(mapping_dir,'chromosome')
-    #for i in [125,881,1259]:
-    #for i in [1111,850]:
+    # test special
+    #for i in [125,881,1259,1111,850]:
+    # test all
     for i in range(6000):
         read_snps_by_user(i,data_dir_genotype,mappings)
 
