@@ -117,7 +117,7 @@ if __name__ == '__main__':
     mappings = {}
     mappings['chromosome'] = load_mapping(mapping_dir,'chromosome')
     #for i in [125,881,1259]:
-    for i in [1111,850]:
-    #for i in range(5000):
+    #for i in [1111,850]:
+    for i in range(6000):
         read_snps_by_user(i,data_dir_genotype,mappings)
 
