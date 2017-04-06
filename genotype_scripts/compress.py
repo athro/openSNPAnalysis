@@ -42,14 +42,6 @@ def open_gzip(filename):
     fh = gzip.GzipFile(filename)
     return fh
 
-get_fh = {}
-get_fh["zip"] = open_zip
-get_fh["gzip"] = open_gzip
-#AK:TBD:get_fh["xls"] = open_xls
-get_fh["plain"] = open
-
-
-
 def compress_open(filename):
     with open(filename, 'rb') as f:
         start_of_file = f.read(1024)

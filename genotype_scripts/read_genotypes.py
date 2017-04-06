@@ -6,6 +6,7 @@ import os
 import glob
 import re
 import compress
+import zipfile
 
 debug = True
 
@@ -91,8 +92,13 @@ def read_snps_by_user(userID,data_dir_genotype,mappings):
             #print(potential_file_names)
             for pot_file in potential_file_names:
                 print(pot_file)
-                with compress.compress_open(pot_file) as fh:
-                    snpData = read_snp_file(fh,mappings)
+                try:
+                    with compress.compress_open(pot_file) as fh:
+                        snpData = read_snp_file(fh,mappings)
+                except zipfile.BadZipFile as e:
+                    print('Bad ZIP File - contents ignored (<<%s>>)' % (pot_file,))
+                else:
+                      snpData # do something with snp data  
         else:
             print('No such user=<<%s>>' % (userID,))
                     
@@ -116,8 +122,10 @@ if __name__ == '__main__':
     mappings = {}
     mappings['chromosome'] = load_mapping(mapping_dir,'chromosome')
     # test special
-    #for i in [125,881,1259,1111,850]:
+    for i in [1497,125,881,1259,1111,850]:
     # test all
-    for i in range(6000):
+    #for i in range(6000):
+    # test not tested yet
+    for i in range(1497,6000):
         read_snps_by_user(i,data_dir_genotype,mappings)
 
