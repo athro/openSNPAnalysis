@@ -85,6 +85,7 @@ def read_snp_file(file_handle,mappings):
 
 
 def read_snps_by_user(userID,data_dir_genotype,mappings):
+    return_values = []
     if os.path.exists(data_dir_genotype):
         potential_file_names = glob.glob('%s%suser%s_*.txt' % (data_dir_genotype,os.path.sep,userID))
         potential_file_names = [k for k in potential_file_names if not ('vcf.' in k) and not ('.IYG.' in k)]
@@ -98,14 +99,14 @@ def read_snps_by_user(userID,data_dir_genotype,mappings):
                 except zipfile.BadZipFile as e:
                     print('Bad ZIP File - contents ignored (<<%s>>)' % (pot_file,))
                 else:
-                      snpData # do something with snp data  
+                    return_values = snpData   
         else:
             print('No such user=<<%s>>' % (userID,))
                     
     else:
         print('The directory <<%s>> does not exits' % (data_dir_genotype,))
         
-    
+    return return_values
 
 
 if __name__ == '__main__':
@@ -126,6 +127,6 @@ if __name__ == '__main__':
     # test all
     #for i in range(6000):
     # test not tested yet
-    for i in range(1497,6000):
+    for i in range(2198,6000):
         read_snps_by_user(i,data_dir_genotype,mappings)
 
