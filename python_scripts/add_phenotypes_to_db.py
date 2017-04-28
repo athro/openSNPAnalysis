@@ -8,12 +8,13 @@ import db_utils
 
 debug = True
 
-insert_user_query        = "insert into user (id) values (%s)"
-insert_pheno_name_query  = "insert into phenotype (name) values (%s)"
-insert_pheno_value_query = "insert into phenotype_value (id_pheno, value) values (%s, %s)"
-insert_pheno_user_query  = "insert into pheno_user (id_pheno, id_user, id_phenotype_value) values (%s, %s, %s)"
-select_pheno_val_query   = "select id from phenotype_value where id_pheno = %s and value = %s"
-select_user_query        = "select id from user where id = %s"
+insert_user_query             = "insert into user (id) values (%s)"
+insert_pheno_name_query       = "insert into phenotype (name) values (%s)"
+insert_pheno_name_query_bulk  = "insert into phenotype (name) values (%s)"
+insert_pheno_value_query      = "insert into phenotype_value (id_pheno, value) values (%s, %s)"
+insert_pheno_user_query       = "insert into pheno_user (id_pheno, id_user, id_phenotype_value) values (%s, %s, %s)"
+select_pheno_val_query        = "select id from phenotype_value where id_pheno = %s and value = %s"
+select_user_query             = "select id from user where id = %s"
 
 phenotypes_to_avoid = ['Darkn'] # There are two phenotypes with this same name. Neither have useful values.
 
@@ -34,6 +35,16 @@ def insert_phenotype_names(db, names):
             else:
                 ids.append(db_id)
     return ids
+
+def insert_phenotype_names_bulk(db, names):
+    """Returns a list of the autoincrement ids that were inserted, for use later"""
+    ids = []
+    # filter for unwanted phenotype names
+    save_names = [name for name in names if name not in phenotypes_to_avoid]
+    db_ids = db_utils.db_insert_auto_id_bulk(db, insert_pheno_name_query, names)
+    print(db_ids)
+    sys.exit(1)
+    return db_ids
 
 
 def insert_phenotype_values(db, pheno_vals, pheno_names, pheno_db_ids):
@@ -71,10 +82,13 @@ def user_already_in_db(db, user_id):
 
     
 def add_phenotypes(db, filename):
-    with open(filename) as f:
+    with open(filename,encoding='utf-8') as f:
         r = csv.reader(f, delimiter=';')
+        print('filename',filename)
         pheno_names = next(r)[1:]
-        pheno_db_ids = insert_phenotype_names(db, pheno_names)
+        #pheno_db_ids = insert_phenotype_names(db, pheno_names)
+        pheno_db_ids = insert_phenotype_names_bulk(db, pheno_names)
+        mama
         pheno_vals = {} # will be a dict of dicts
         users_vals = {} # will be a dict of lists
         for pheno_name in pheno_names:
