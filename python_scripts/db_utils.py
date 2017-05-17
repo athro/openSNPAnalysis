@@ -63,7 +63,6 @@ def get_db_params():
 def db_select_one(db, query, data):
     """Select a single row only"""
     cursor = db.cursor()
-
     try:
         cursor.execute(query, data)
     except pymysql.MySQLError:
@@ -71,11 +70,12 @@ def db_select_one(db, query, data):
         sys.stderr.write(repr(data) + "\n")
         traceback.print_exc()
         cursor.close()
-        return False
-    result = cursor.fetchone()
-    
-    cursor.close()
-    return result
+        sys.exit(1)
+        #return False
+    else:
+        result = cursor.fetchone()
+        cursor.close()
+        return result
 
 def db_insert_no_auto_id(db, query, data):
     """For queries where there is no insertion id created, or where we don't care about getting it back"""
@@ -89,11 +89,11 @@ def db_insert_no_auto_id(db, query, data):
         traceback.print_exc()
         cursor.close()
         sys.exit(1)
-        return False
-
-    cursor.close()
-    db.commit()
-    return True
+        #return False
+    else:
+        cursor.close()
+        db.commit()
+        return True
 
 
 
@@ -110,13 +110,12 @@ def db_insert_auto_id(db, query, data):
         traceback.print_exc()
         cursor.close()
         sys.exit(1)
-        return -1
-
-    db_id = db.insert_id()
-
-    cursor.close()
-    db.commit()
-    return db_id
+        #return -1
+    else:
+        db_id = db.insert_id() 
+        cursor.close()
+        db.commit()
+        return db_id
 
 def db_insert_auto_id_bulk(db, query, data):
     """For queries where we want to know the auto increment id that was given, insertion in one single batch"""
@@ -130,33 +129,31 @@ def db_insert_auto_id_bulk(db, query, data):
         traceback.print_exc()
         cursor.close()
         sys.exit(1)
-        return -1
-
-    select_last_id_query = 'SELECT LAST_INSERT_ID() AS id'
-    try:
-        db_id_start = cursor.execute(select_last_id_query)
-    except pymysql.MySQLError:
-        sys.stderr.write("Error from MySQL:\n" + select_last_id_query + "\n")
-        sys.stderr.write(repr(data) + "\n")
-        traceback.print_exc()
-        cursor.close()
-        sys.exit(1)
-        return -1
-
-    
-    db_id_end   = db.insert_id()
-
-    cursor.close()
-    db.commit()
-    print('db_id_start',db_id_start,'db_id_end',db_id_end)
-    return db_id_start,db_id_end
+        #return -1
+    else:
+        select_last_id_query = 'SELECT LAST_INSERT_ID() AS id'
+        try:
+            db_id_start = cursor.execute(select_last_id_query)
+        except pymysql.MySQLError:
+            sys.stderr.write("Error from MySQL:\n" + select_last_id_query + "\n")
+            sys.stderr.write(repr(data) + "\n")
+            traceback.print_exc()
+            cursor.close()
+            sys.exit(1)
+            #return -1
+        else:
+            db_id_end   = db_id_start + len(data) - 1 #db.insert_id()
+            cursor.close()
+            db.commit()
+            print('db_id_start',db_id_start,'db_id_end',db_id_end)
+            return db_id_start,db_id_end
     
 
 
 
 #def db_select_all(db, query, data):
 def db_select_all(db, query, data=None):
-    """Select a all rows"""
+    """Select all rows"""
     cursor = db.cursor()
 
     try:
@@ -166,8 +163,10 @@ def db_select_all(db, query, data=None):
         sys.stderr.write(repr(data) + "\n")
         traceback.print_exc()
         cursor.close()
-        return False
-    result = cursor.fetchall()
-    cursor.close()
-    return result
+        sys.exit(1)
+        #return False
+    else:
+        result = cursor.fetchall()
+        cursor.close()
+        return result
 

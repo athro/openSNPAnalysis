@@ -8,6 +8,8 @@ import re
 import compress
 import zipfile
 
+import add_genotypes_to_db as db_geno
+
 debug = True
 
 file_re = re.compile('user(\d+)\_file(\d+)\_yearofbirth\_(\w+)\_sex\_(\w+)\.(\S+)\.txt')
@@ -24,9 +26,10 @@ def load_mapping(mapping_dir,mapping_name):
     return mapping
         
 def snpify_line(a_line,mappings):
-    #remove flancking whitepaces
+    """Returns a SNP data dictionary of id, chromosome, loc and allele vals, or returns None"""
+    # remove flanking whitepaces
     a_line = a_line.strip()
-    #remove overly user of """
+    # remove over use of """
     a_line = a_line.replace('"','')
 
     # do not use empty lines
@@ -38,7 +41,7 @@ def snpify_line(a_line,mappings):
         if len(splitted)<=1:
             splitted = a_line.split(',')
 
-        # if alleles where one single string
+        # if alleles were one single string
         if len(splitted[-1]) == 2:
             splitted = splitted[:-1]+[splitted[-1][0],splitted[-1][1]]
 
@@ -50,11 +53,17 @@ def snpify_line(a_line,mappings):
             try:
                 chromosome = mappings['chromosome'][splitted[1]]
             except:
-                print('Error on line:\n%s' % (a_line,))
+                sys.stderr.write('Error on line: %s\n' % (a_line,))
         else:
-            print('Problems?: ', splitted)
+            sys.stderr.write('Problems?: ', splitted)
+            sys.stderr.write('\n')
 
-        snp_data = [splitted[0],chromosome]+splitted[2:]
+        snp_data = { 'snp_id':splitted[0],
+                     'chromosome':chromosome,
+                     'location':splitted[2],
+                     'allele1':splitted[3] }
+        if len_splitted > 4:
+            snp_data['allele2'] = splitted[4]
 
         return snp_data
     else:
@@ -62,14 +71,14 @@ def snpify_line(a_line,mappings):
                 
 
 def read_snp_file(file_handle,mappings):
+    """Returns a list of SNP data dicts"""
     snp_data = []
     open_possible = False
     with file_handle:
         try:
             data = file_handle.readlines()
         except Exception as e:
-        #except:
-            print('Could not read in data! Exception: %s' % (e,))
+            sys.stderr.write('Could not read in data! Exception: %s\n' % (e,))
             data = []
     for line in data:
         if isinstance(line,(bytes, bytearray)):
@@ -84,27 +93,28 @@ def read_snp_file(file_handle,mappings):
     #file_handle.seek(0)
 
 
-def read_snps_by_user(userID,data_dir_genotype,mappings):
+def read_snps_by_user(user_id, data_dir_genotype, mappings):
     return_values = []
     if os.path.exists(data_dir_genotype):
-        potential_file_names = glob.glob('%s%suser%s_*.txt' % (data_dir_genotype,os.path.sep,userID))
+        potential_file_names = glob.glob('%s%suser%s_*.txt' % (data_dir_genotype, os.path.sep, user_id))
         potential_file_names = [k for k in potential_file_names if not ('vcf.' in k) and not ('.IYG.' in k)]
         if potential_file_names:
             #print(potential_file_names)
             for pot_file in potential_file_names:
-                print(pot_file)
+                #print(pot_file)
                 try:
                     with compress.compress_open(pot_file) as fh:
-                        snpData = read_snp_file(fh,mappings)
+                        snp_data = read_snp_file(fh, mappings)
                 except zipfile.BadZipFile as e:
-                    print('Bad ZIP File - contents ignored (<<%s>>)' % (pot_file,))
+                    sys.stderr.write('Bad ZIP File - contents ignored (<<%s>>)\n' % (pot_file,))
                 else:
-                    return_values = snpData   
+                    method = pot_file.split('.')[-2] # From filename. But can we determine this?
+                    return_values.append((pot_file, method, snp_data))   
         else:
-            print('No such user=<<%s>>' % (userID,))
+            sys.stderr.write('No such user=<<%s>>\n' % (userID,))
                     
     else:
-        print('The directory <<%s>> does not exits' % (data_dir_genotype,))
+        sys.stderr.write('The directory <<%s>> does not exist\n' % (data_dir_genotype,))
         
     return return_values
 
@@ -116,17 +126,20 @@ if __name__ == '__main__':
     data_dir_annotation = '%s%sannotation' % (data_dir,os.path.sep)
     mapping_dir         = "mapping"
     
-    example_file1 = '%s%suser972_file483_yearofbirth_unknown_sex_unknown.23andme.txt' % (data_dir_genotype,os.path.sep)
-    example_file2 = '%s%suser4468_file3062_yearofbirth_unknown_sex_unknown.ancestry.txt' % (data_dir_genotype,os.path.sep)
+    #example_file1 = '%s%suser972_file483_yearofbirth_unknown_sex_unknown.23andme.txt' % (data_dir_genotype,os.path.sep)
+    #example_file2 = '%s%suser4468_file3062_yearofbirth_unknown_sex_unknown.ancestry.txt' % (data_dir_genotype,os.path.sep)
     #read_23andme(example_file1)
     # read_ancestry(example_file2)
     mappings = {}
-    mappings['chromosome'] = load_mapping(mapping_dir,'chromosome')
+    mappings['chromosome'] = load_mapping(mapping_dir, 'chromosome')
     # test special
     #for i in [1497,125,881,1259,1111,850]:
     # test all
     #for i in range(6000):
     # test not tested yet
-    for i in range(2198,6000):
-        read_snps_by_user(i,data_dir_genotype,mappings)
-
+    #for i in range(2198,6000):
+    for i in [881,1259]:
+        snp_data = read_snps_by_user(i, data_dir_genotype, mappings)
+        if snp_data:
+            for (filename, method, genotype) in snp_data:
+                print(filename, method, len(genotype))

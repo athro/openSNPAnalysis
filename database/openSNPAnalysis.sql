@@ -88,7 +88,7 @@ DROP TABLE IF EXISTS `openSNPAnalysis`.`snp` ;
 CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`snp` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `name` VARCHAR(45) NOT NULL ,
-  `chromosome` INT NOT NULL ,
+  `chromosome` VARCHAR(5) NOT NULL ,
   `location` INT NOT NULL ,
   PRIMARY KEY (`id`) ,
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) )
@@ -127,7 +127,7 @@ DROP TABLE IF EXISTS `openSNPAnalysis`.`genotype_file` ;
 
 CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`genotype_file` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `filename` VARCHAR(45) NOT NULL ,
+  `filename` VARCHAR(200) NOT NULL ,
   `id_user` INT NOT NULL ,
   `id_method` INT NOT NULL ,
   PRIMARY KEY (`id`) ,
