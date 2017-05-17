@@ -94,6 +94,10 @@ def read_snp_file(file_handle,mappings):
 
 
 def read_snps_by_user(user_id, data_dir_genotype, mappings):
+    """Returns a list of (filename,method,snp_data) triples.
+    A user may have multiple files.
+    The snp_data is a list of dicts.
+    """
     return_values = []
     if os.path.exists(data_dir_genotype):
         potential_file_names = glob.glob('%s%suser%s_*.txt' % (data_dir_genotype, os.path.sep, user_id))

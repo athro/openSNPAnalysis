@@ -149,6 +149,27 @@ def db_insert_auto_id_bulk(db, query, data):
             return db_id_start,db_id_end
     
 
+def db_insert_no_auto_id_bulk(db, query, data, batch_size=100):
+    """For queries where we don't have auto_id or don't care, insertion in one single batch"""
+
+    data_size = len(data)
+    for i in range(0, data_size-1, batch_size):
+        data_batch = data[i : i+batch_size]
+        cursor = db.cursor()
+        try:
+            cursor.executemany(query, data_batch)
+        except pymysql.MySQLError:
+            sys.stderr.write("Error from MySQL:\n" + query + "\n")
+            sys.stderr.write(repr(data) + "\n")
+            traceback.print_exc()
+            cursor.close()
+            sys.exit(1)
+        else:
+            cursor.close()
+            db.commit()
+    return True
+    
+
 
 
 #def db_select_all(db, query, data):

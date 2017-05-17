@@ -25,7 +25,10 @@ insert_user_query          = "insert into user (id) values (%s)"
 
 select_all_methods_query   = "select id, name from geno_method"
 insert_geno_method_query   = "insert into geno_method (name) values (%s)"
+select_filename_query      = "select id from genotype_file where filename = %s"
 insert_geno_file           = "insert into genotype_file (filename, id_user, id_method) values (%s, %s, %s)"
+
+insert_genotype_query      = "insert into genotype (id_snp, id_allele, id_genotype_file) values (%s, %s, %s)"
 
 snps = {}
 
@@ -43,6 +46,9 @@ def db_connect():
         sys.stderr.write("Failed to connect to database: " + db_params['dbname'] + " on " + db_params['hostname'] + "\n")
         sys.exit(1)
     return db_connection
+
+# -----------------------------------------------------------------------------------
+# Cache ids from certain db tables in memory in dicts (snps, alleles, geno_methods)
 
 def set_up_snps_from_db(db_connection):
     snp_hash = {}
@@ -71,6 +77,9 @@ def set_up_geno_methods_from_db(db_connection):
     return method_hash
             
 
+# -----------------------------------------------------------------------------------
+
+
 # what was this function?
 def get_info(snp_info):
     used_snps     = {}
@@ -79,26 +88,34 @@ def get_info(snp_info):
         print(entry)
     return (used_snps,used_alleles)
 
+# ----------------------------------------------------------------------------------
+# Database inserts
+
 def insert_new_alleles_into_db(db_connection, hash_allele, hash_allele_temp):
     """Inserts into database and also modifies hash_allele to add contents of hash_allele_temp with new db ids"""
     for allele1 in hash_allele_temp.keys():
         for allele2 in hash_allele_temp[allele1].keys():
             db_id = db_utils.db_insert_auto_id(db_connection, insert_into_allele_query, (allele1,allele2))
             utils.insert_double_key_hash(hash_allele,allele1,allele2,db_id)
-            print('insert: ',allele1,allele2,db_id)
+            # print('insert: ',allele1,allele2,db_id)
     return hash_allele
 
-def insert_genotype_file(db_connection, filename, user_id, method_id):
-    db_id = db_utils.db_insert_auto_id(db_connection, insert_geno_file, (filename, user_id, method_id))
-    return db_id
+def select_or_insert_genotype_file(db_connection, filename, user_id, method_id):
+    file_id = None
+    result = db_utils.db_select_one(db_connection, select_filename_query, (filename,))
+    if not result:
+        file_id = db_utils.db_insert_auto_id(db_connection, insert_geno_file, (filename, user_id, method_id))
+    else:
+        file_id = result[0]
+    return file_id
 
-#not yet written
-def insert_new_genotypes_into_db(db_connection, hash_snp, hash_snp_temp):
+def insert_new_snps_into_db(db_connection, hash_snp, hash_snp_temp):
     """Inserts into database and also modifies hash_snp to add contents of hash_snp_temp with new db ids"""
     for name_snp in hash_snp_temp.keys():
-        db_id = db_utils.db_insert_auto_id(db_connection, insert_into_snp_query, (name, chromosome, location))
-        # need to update the hash
-
+        (chromosome, location) = hash_snp_temp[name_snp]
+        db_id = db_utils.db_insert_auto_id(db_connection, insert_into_snp_query, (name_snp, chromosome, location))
+        # update the hash_snp with the new id
+        hash_snp[name_snp] = db_id
     return hash_snp
 
 def check_or_insert_user(db_connection, user_id):
@@ -106,8 +123,20 @@ def check_or_insert_user(db_connection, user_id):
     if res == None:
         db_utils.db_insert_no_auto_id(db_connection, insert_user_id, (user_id,))
 
+def insert_all_genotypes(db_connection, hash_snp, hash_allele, id_file, genotype_data):
+    to_insert = []
+    for genotype_entry in genotype_data:
+        name_snp = genotype_entry['snp_id']
+        allele1  = genotype_entry['allele1']
+        allele2  = genotype_entry.get('allele2') # default None if not found
+        id_snp   = hash_snp[name_snp]
+        id_allele = hash_allele[allele1][allele2]
+        to_insert.append( (id_snp, id_allele, id_file) )
+    db_utils.db_insert_no_auto_id_bulk(db_connection, insert_genotype_query, to_insert, batch_size=1000)
 
-def check_snp_file_entries(genotype_data,hash_snp,hash_allele):
+# -------------------------------------------------------------------------------------
+
+def check_snp_file_entries(genotype_data, hash_snp, hash_allele):
     """
     If any snps are not already in the db, we save them into a temporary hash for later batch deposit.
     Parameters:
@@ -127,7 +156,7 @@ def check_snp_file_entries(genotype_data,hash_snp,hash_allele):
 
         if name_snp not in hash_snp:
             if name_snp not in hash_snp_temp:
-                hash_snp_temp[name_snp] = {}
+                hash_snp_temp[name_snp] = (genotype_entry['chromosome'], genotype_entry['location'])
         if not utils.has_double_key_hash(hash_allele, allele1_snp, allele2_snp):
             if not utils.has_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp):
                 utils.insert_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp, None)
@@ -149,9 +178,7 @@ if __name__ == '__main__':
     # get db connection    
     db_connection = db_connect()
     hash_allele = set_up_alleles_from_db(db_connection)
-    print('hash_allele',hash_allele)
     hash_snp = set_up_snps_from_db(db_connection)
-    print('hash_snp',hash_snp)
     hash_method = set_up_geno_methods_from_db(db_connection)
     
     #for i in range(2,170):
@@ -159,15 +186,17 @@ if __name__ == '__main__':
         check_or_insert_user(db_connection, user_id)
         snp_data = read_genotypes.read_snps_by_user(user_id, data_dir_genotype, mappings)
         for (filename, method, genotype_data) in snp_data:
-            print(filename, method, len(genotype_data))
+            if debug:
+                print(filename, method, len(genotype_data))
             (hash_snp_temp, hash_allele_temp) = check_snp_file_entries(genotype_data, hash_snp, hash_allele)
             hash_allele = insert_new_alleles_into_db(db_connection, hash_allele, hash_allele_temp)
+
+            # assumption! that method is in the db and therefore in the hash. But there are very few methods so more efficient to assume than check.
+            file_id = select_or_insert_genotype_file(db_connection, filename, user_id, hash_method[method])
+
+            # add or lookup all the snps ids in snp table or hash (name, chromosome, location)
+            hash_snp = insert_new_snps_into_db(db_connection, hash_snp, hash_snp_temp)
+
+            # add all the genotypes : snp_id, allele_id, file_id
+            insert_all_genotypes(db_connection, hash_snp, hash_allele, file_id, genotype_data)
             
-            # assumption! that method is in the db and therefore in the hash! but there are very few methods so more efficient to assume.
-            file_id = insert_genotype_file(db_connection, filename, user_id, hash_method[method])
-            print("file_id", file_id)
-
-            # add or check the snp (name, chromosome, location)
-            # hash_snp = insert_new_snps_into_db(db_connection, genotype_data, hash_snp, hash_snp_temp)
-
-            # add the genotype : snp_id, allele_id, file_id
