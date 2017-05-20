@@ -113,7 +113,9 @@ def insert_new_snps_into_db(db_connection, hash_snp, hash_snp_temp):
     """Inserts into database and also modifies hash_snp to add contents of hash_snp_temp with new db ids"""
     for name_snp in hash_snp_temp.keys():
         (chromosome, location) = hash_snp_temp[name_snp]
+        #AK: not bulk!
         db_id = db_utils.db_insert_auto_id(db_connection, insert_into_snp_query, (name_snp, chromosome, location))
+        #AK: not bulk!
         # update the hash_snp with the new id
         hash_snp[name_snp] = db_id
     return hash_snp
@@ -121,7 +123,7 @@ def insert_new_snps_into_db(db_connection, hash_snp, hash_snp_temp):
 def check_or_insert_user(db_connection, user_id):
     res = db_utils.db_select_one(db_connection, select_user_query, (user_id,))
     if res == None:
-        db_utils.db_insert_no_auto_id(db_connection, insert_user_id, (user_id,))
+        db_utils.db_insert_no_auto_id(db_connection, insert_user_query, (user_id,))
 
 def insert_all_genotypes(db_connection, hash_snp, hash_allele, id_file, genotype_data):
     to_insert = []
