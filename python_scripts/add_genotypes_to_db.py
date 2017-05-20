@@ -1,3 +1,7 @@
+import logging
+import logger
+logger_instance = logger.setup_logger('openSNPAnalysis','openSNPAnalysis.log',logging.DEBUG)
+
 import sys
 import os.path
 #import getopt
@@ -8,12 +12,11 @@ import db_utils
 import utils
 
 import read_genotypes
- 
-debug = True
 
 
 select_all_snps_query      = "select id,name,chromosome,location from snp"
 select_snp_query_by_name   = "select id,name,chromosome,location from snp where name = %s"
+select_many_snp_query_by_name   = "select name,id from snp where name in (%s)" # for hash look up
 select_snp_query_by_id     = "select id,name,chromosome,location from snp where id = %s"
 insert_into_snp_query      = "insert into snp (name,chromosome,location) values (%s,%s,%s)"
 
@@ -33,9 +36,11 @@ insert_genotype_query      = "insert into genotype (id_snp, id_allele, id_genoty
 snps = {}
 
 
+
+
 def db_connect():
     db_params = db_utils.get_db_params_from_config()
-    print(db_params['hostname'])
+    logger_instance.info('Connecting to host: %s' % (db_params['hostname'],))
     try:
         db_connection = pymysql.connect( host   = db_params['hostname'],
                               db     = db_params['dbname'],
@@ -43,7 +48,9 @@ def db_connect():
                               passwd = db_params['pword'],
                               charset= 'utf8')
     except pymysql.MySQLError:
-        sys.stderr.write("Failed to connect to database: " + db_params['dbname'] + " on " + db_params['hostname'] + "\n")
+        err_string = "Failed to connect to database: " + db_params['dbname'] + " on " + db_params['hostname']
+        sys.stderr.write(err_string + "\n")
+        logger_instance.debug(err_string)
         sys.exit(1)
     return db_connection
 
@@ -82,6 +89,7 @@ def set_up_geno_methods_from_db(db_connection):
 
 # what was this function?
 def get_info(snp_info):
+    logger_instance.debug('snp_info:      %s' % (snp_info,))
     used_snps     = {}
     used_alleles  = {}
     for entry in snp_info[:10]:
@@ -92,6 +100,8 @@ def get_info(snp_info):
 # Database inserts
 
 def insert_new_alleles_into_db(db_connection, hash_allele, hash_allele_temp):
+    logger_instance.debug('len(hash_allele):      %s' % (len(hash_allele),))
+    logger_instance.debug('len(hash_allele_temp): %s' % (len(hash_allele_temp),))
     """Inserts into database and also modifies hash_allele to add contents of hash_allele_temp with new db ids"""
     for allele1 in hash_allele_temp.keys():
         for allele2 in hash_allele_temp[allele1].keys():
@@ -101,6 +111,7 @@ def insert_new_alleles_into_db(db_connection, hash_allele, hash_allele_temp):
     return hash_allele
 
 def select_or_insert_genotype_file(db_connection, filename, user_id, method_id):
+    logger_instance.debug('filename:     %s' % (filename,))
     file_id = None
     result = db_utils.db_select_one(db_connection, select_filename_query, (filename,))
     if not result:
@@ -111,21 +122,63 @@ def select_or_insert_genotype_file(db_connection, filename, user_id, method_id):
 
 def insert_new_snps_into_db(db_connection, hash_snp, hash_snp_temp):
     """Inserts into database and also modifies hash_snp to add contents of hash_snp_temp with new db ids"""
-    for name_snp in hash_snp_temp.keys():
-        (chromosome, location) = hash_snp_temp[name_snp]
-        #AK: not bulk!
-        db_id = db_utils.db_insert_auto_id(db_connection, insert_into_snp_query, (name_snp, chromosome, location))
-        #AK: not bulk!
-        # update the hash_snp with the new id
-        hash_snp[name_snp] = db_id
+    logger_instance.debug('len(hash_snp.keys()):   %s' % (len(hash_snp.keys()),))
+    # for name_snp in hash_snp_temp.keys():
+    #     (chromosome, location) = hash_snp_temp[name_snp]
+    #     #AK: not bulk!
+    #     db_id = db_utils.db_insert_auto_id(db_connection, insert_into_snp_query, (name_snp, chromosome, location))
+    #     #AK: not bulk!
+    #     # update the hash_snp with the new id
+    #     hash_snp[name_snp] = db_id
+    # bulkify
+
+    # extract the required data
+    chromo_loc_data = [(name_snp, hash_snp_temp[name_snp][0], hash_snp_temp[name_snp][1]) for name_snp in hash_snp_temp.keys()]
+
+    # insert as bulk, return values are begin and end of the auto IDs
+    (db_ids_start,db_ids_end) = db_utils.db_insert_auto_id_bulk(db_connection, insert_into_snp_query, chromo_loc_data)
+     
+    # convert these IDs to a list, just to zip it later for inserting into hash_snp
+    logger_instance.debug('Return Values IDs:       %s' % ((db_ids_start,db_ids_end),))
+
+    # do a sanity check (i.e. check if the length of the tuples to be inserted is the same as the returned IDs):
+    if len(hash_snp_temp.keys()) != db_ids_end-db_ids_start+1:
+        err_string = 'Bulk insert for SNPs returned a different number of IDs (#Keys SNPs:%s =/= #IDs:%s)' % (len(hash_snp_temp.keys()),len(db_ids))
+        logger_instance.debug(err_string)
+        logger_instance.error(err_string)
+        sys.exit(-1)
+
+    # insert the IDs in the corresponding hash
+    # the return values from_bulk are not really reliable: problem between different tables and the function LAST_INSERT_ID()
+    # therefore: select and fill the corresponding data
+
+    #if hash_snp_temp not empty
+    if len(hash_snp_temp.keys())>0:
+        # construct variable number of %s
+        variable_number_of_format_strings = ','.join(['%s'] * len(hash_snp_temp.keys()))
+        # logger_instance.debug('variable_number_of_format_strings = %s' % (variable_number_of_format_strings))
+        select_statement = select_many_snp_query_by_name % (variable_number_of_format_strings,)
+        # logger_instance.debug('select_statement = %s' % (select_statement,))
+        returnedIDs = db_utils.db_select_all(db_connection,select_statement,[(x,) for x in hash_snp_temp.keys()])
+        # logger_instance.debug(returnedIDs)
+        # sys.exit(-2)
+    
+        #for (name_snp,db_id) in zip(hash_snp_temp.keys(),list(range(db_ids_start,db_ids_end+1))):
+        for (name_snp,db_id) in returnedIDs:
+            #just_blocks_the_logger:  logger_instance.debug('name_snp = %15s : db_id = %10s' % (name_snp,db_id,))
+            hash_snp[name_snp] = db_id
+            
     return hash_snp
 
 def check_or_insert_user(db_connection, user_id):
+    logger_instance.debug("user_id       = %s" % (user_id,))
     res = db_utils.db_select_one(db_connection, select_user_query, (user_id,))
     if res == None:
         db_utils.db_insert_no_auto_id(db_connection, insert_user_query, (user_id,))
+        logger_instance.debug('New user ID inserted (ID=%s)' % (user_id,))
 
 def insert_all_genotypes(db_connection, hash_snp, hash_allele, id_file, genotype_data):
+    logger_instance.debug("id_file       = %s" % (id_file,))
     to_insert = []
     for genotype_entry in genotype_data:
         name_snp = genotype_entry['snp_id']
@@ -148,6 +201,8 @@ def check_snp_file_entries(genotype_data, hash_snp, hash_allele):
     Returns:
     the constructed pair of temporary hashes
     """
+    logger_instance.debug("len(genotype_data)       = %s" % (len(genotype_data),))
+
     hash_snp_temp = {}
     hash_allele_temp = {}
     
@@ -173,6 +228,12 @@ if __name__ == '__main__':
     data_dir_annotation = '%s%sannotation' % (data_dir,os.path.sep)
     mapping_dir         = "mapping"
 
+    logger_instance.info("data_dir            = %s" % (data_dir,))
+    logger_instance.info("data_dir_genotype   = %s" % (data_dir_genotype,))
+    logger_instance.info("data_dir_phenotype  = %s" % (data_dir_phenotype,))
+    logger_instance.info("data_dir_annotation = %s" % (data_dir_annotation,))
+    logger_instance.info("mapping_dir         = %s" % (mapping_dir,))
+    
     # load chromosome mappings
     mappings = {}
     mappings['chromosome'] = read_genotypes.load_mapping(mapping_dir,'chromosome')
@@ -184,12 +245,12 @@ if __name__ == '__main__':
     hash_method = set_up_geno_methods_from_db(db_connection)
     
     #for i in range(2,170):
-    for user_id in [881,]: # 885, quick alternative: 937
+    #for user_id in [927,937,1004,1497,2566]: # 885, quick alternative: 937
+    for user_id in range(1,10): # 885, quick alternative: 937
         check_or_insert_user(db_connection, user_id)
         snp_data = read_genotypes.read_snps_by_user(user_id, data_dir_genotype, mappings)
         for (filename, method, genotype_data) in snp_data:
-            if debug:
-                print(filename, method, len(genotype_data))
+            logger_instance.debug('%s\t%s\t%s' % (filename, method, len(genotype_data),))
             (hash_snp_temp, hash_allele_temp) = check_snp_file_entries(genotype_data, hash_snp, hash_allele)
             hash_allele = insert_new_alleles_into_db(db_connection, hash_allele, hash_allele_temp)
 
