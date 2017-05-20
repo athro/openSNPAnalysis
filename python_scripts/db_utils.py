@@ -158,7 +158,7 @@ def db_insert_auto_id_bulk(db, query, data):
         sys.stderr.write(err_string + "\n")
         logger_instance.debug(err_string)
 
-        sys.stderr.write(repr(data) + "\n")
+        #sys.stderr.write(repr(data) + "\n")
         logger_instance.debug(repr(data))
 
         traceback.print_exc()
@@ -176,7 +176,7 @@ def db_insert_auto_id_bulk(db, query, data):
             sys.stderr.write(err_string + "\n")
             logger_instance.debug(err_string)
 
-            sys.stderr.write(repr(data) + "\n")
+            #sys.stderr.write(repr(data) + "\n")
             logger_instance.debug(repr(data))
 
             traceback.print_exc()
@@ -208,7 +208,7 @@ def db_insert_no_auto_id_bulk(db, query, data, batch_size=100):
             sys.stderr.write(err_string + "\n")
             logger_instance.debug(err_string)
 
-            sys.stderr.write(repr(data) + "\n")
+            #sys.stderr.write(repr(data) + "\n")
             logger_instance.debug(repr(data))
 
             traceback.print_exc()
@@ -237,7 +237,7 @@ def db_select_all(db, query, data=None):
         sys.stderr.write(err_string + "\n")
         logger_instance.debug(err_string)
 
-        sys.stderr.write(repr(data) + "\n")
+        #sys.stderr.write(repr(data) + "\n")
         logger_instance.debug(repr(data))
 
         traceback.print_exc()
