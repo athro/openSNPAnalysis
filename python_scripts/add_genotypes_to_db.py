@@ -123,6 +123,10 @@ def select_or_insert_genotype_file(db_connection, filename, user_id, method_id):
 def insert_new_snps_into_db(db_connection, hash_snp, hash_snp_temp):
     """Inserts into database and also modifies hash_snp to add contents of hash_snp_temp with new db ids"""
     logger_instance.debug('len(hash_snp.keys()):   %s' % (len(hash_snp.keys()),))
+
+    # for checking later:
+    number_keys_in_hash_before = len(hash_snp.keys())
+    
     # for name_snp in hash_snp_temp.keys():
     #     (chromosome, location) = hash_snp_temp[name_snp]
     #     #AK: not bulk!
@@ -163,11 +167,18 @@ def insert_new_snps_into_db(db_connection, hash_snp, hash_snp_temp):
         # logger_instance.debug(returnedIDs)
         # sys.exit(-2)
     
-        #for (name_snp,db_id) in zip(hash_snp_temp.keys(),list(range(db_ids_start,db_ids_end+1))):
         for (name_snp,db_id) in returnedIDs:
             #just_blocks_the_logger:  logger_instance.debug('name_snp = %15s : db_id = %10s' % (name_snp,db_id,))
             hash_snp[name_snp] = db_id
-            
+
+    number_keys_in_temphash = len(hash_snp_temp.keys())
+    number_keys_in_hash_after = len(hash_snp.keys())
+
+    logger_instance.debug('number_keys_in_hash_before = %15s' % (number_keys_in_hash_before,))
+    logger_instance.debug('number_keys_in_temphash    = %15s' % (number_keys_in_temphash,))
+    logger_instance.debug('number_keys_in_hash_after  = %15s' % (number_keys_in_hash_after,))
+    logger_instance.debug('difference(before-after)   = %15s' % (number_keys_in_hash_before-number_keys_in_hash_after,))
+    
     return hash_snp
 
 def check_or_insert_user(db_connection, user_id):
@@ -245,11 +256,12 @@ if __name__ == '__main__':
     hash_method = set_up_geno_methods_from_db(db_connection)
     
     #for i in range(2,170):
-    #for user_id in [927,937,1004,1497,2566]: # 885, quick alternative: 937
-    for user_id in range(1,10): # 885, quick alternative: 937
-        check_or_insert_user(db_connection, user_id)
+    for user_id in [4088, 4170, 2566, 4120, 1004, 927,937,1497]: # 885, quick alternative: 937
+    # for user_id in range(1,10): # 885, quick alternative: 937
         snp_data = read_genotypes.read_snps_by_user(user_id, data_dir_genotype, mappings)
         for (filename, method, genotype_data) in snp_data:
+            # ensure that users exists in the data base - moved to here, so unneccesry users are created
+            check_or_insert_user(db_connection, user_id)
             logger_instance.debug('%s\t%s\t%s' % (filename, method, len(genotype_data),))
             (hash_snp_temp, hash_allele_temp) = check_snp_file_entries(genotype_data, hash_snp, hash_allele)
             hash_allele = insert_new_alleles_into_db(db_connection, hash_allele, hash_allele_temp)
