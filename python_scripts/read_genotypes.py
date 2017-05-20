@@ -115,7 +115,7 @@ def read_snps_by_user(user_id, data_dir_genotype, mappings):
                     method = pot_file.split('.')[-2] # From filename. But can we determine this?
                     return_values.append((pot_file, method, snp_data))   
         else:
-            sys.stderr.write('No such user=<<%s>>\n' % (userID,))
+            sys.stderr.write('No such user=<<%s>>\n' % (user_id,))
                     
     else:
         sys.stderr.write('The directory <<%s>> does not exist\n' % (data_dir_genotype,))
