@@ -152,29 +152,13 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `openSNPAnalysis`.`genotype` ;
 
 CREATE  TABLE IF NOT EXISTS `openSNPAnalysis`.`genotype` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
   `id_snp` INT NOT NULL ,
   `id_allele` INT NOT NULL ,
   `id_genotype_file` INT NOT NULL ,
-  PRIMARY KEY (`id_snp`, `id_allele`, `id_genotype_file`) ,
-  INDEX `geno_snp` (`id_snp` ASC) ,
-  INDEX `geno_allele` (`id_allele` ASC) ,
-  INDEX `geno_geno_file` (`id_genotype_file` ASC) ,
-  CONSTRAINT `geno_snp`
-    FOREIGN KEY (`id_snp` )
-    REFERENCES `openSNPAnalysis`.`snp` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `geno_allele`
-    FOREIGN KEY (`id_allele` )
-    REFERENCES `openSNPAnalysis`.`allele` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `geno_geno_file`
-    FOREIGN KEY (`id_genotype_file` )
-    REFERENCES `openSNPAnalysis`.`genotype_file` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  PRIMARY KEY (`id`) )
 ENGINE = InnoDB;
+
 
 
 -- -----------------------------------------------------
