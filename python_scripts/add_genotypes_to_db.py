@@ -256,8 +256,8 @@ if __name__ == '__main__':
     hash_method = set_up_geno_methods_from_db(db_connection)
     
     #for i in range(2,170):
-    for user_id in [288, 305, 339, 4070, 4088, 4170, 2566, 4120, 1004, 927,937,1497]: # 885, quick alternative: 937
-    # for user_id in range(1,10): # 885, quick alternative: 937
+    #for user_id in [288, 305, 339, 4070, 4088, 4170, 2566, 4120, 1004, 927,937,1497]: # 885, quick alternative: 937
+    for user_id in range(1,6000): # 885, quick alternative: 937
         snp_data = read_genotypes.read_snps_by_user(user_id, data_dir_genotype, mappings)
         for (filename, method, genotype_data) in snp_data:
             # ensure that users exists in the data base - moved to here, so unneccesry users are created
