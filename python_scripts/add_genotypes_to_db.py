@@ -198,7 +198,7 @@ def insert_all_genotypes(db_connection, hash_snp, hash_allele, id_file, genotype
         id_snp   = hash_snp[name_snp]
         id_allele = hash_allele[allele1][allele2]
         to_insert.append( (id_snp, id_allele, id_file) )
-    db_utils.db_insert_no_auto_id_bulk(db_connection, insert_genotype_query, to_insert, batch_size=1000)
+    db_utils.db_insert_no_auto_id_bulk(db_connection, insert_genotype_query, to_insert, batch_size=100000)
 
 # -------------------------------------------------------------------------------------
 
