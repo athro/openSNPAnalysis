@@ -185,6 +185,7 @@ def check_or_insert_user(db_connection, user_id):
     logger_instance.debug("user_id       = %s" % (user_id,))
     res = db_utils.db_select_one(db_connection, select_user_query, (user_id,))
     if res == None:
+        print("user_id       = %s" % (user_id,))
         db_utils.db_insert_no_auto_id(db_connection, insert_user_query, (user_id,))
         logger_instance.debug('New user ID inserted (ID=%s)' % (user_id,))
 

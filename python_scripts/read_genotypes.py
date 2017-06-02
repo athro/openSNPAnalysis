@@ -12,6 +12,10 @@ import add_genotypes_to_db as db_geno
 
 debug = True
 
+import logging
+logger_instance = logging.getLogger('openSNPAnalysis')
+
+
 file_re = re.compile('user(\d+)\_file(\d+)\_yearofbirth\_(\w+)\_sex\_(\w+)\.(\S+)\.txt')
 
 def load_mapping(mapping_dir,mapping_name):
@@ -54,9 +58,11 @@ def snpify_line(a_line,mappings):
                 chromosome = mappings['chromosome'][splitted[1]]
             except:
                 sys.stderr.write('Error on line: %s\n' % (a_line,))
+                logger_instance.debug('Error on line: %s\n' % (a_line,))
                 pass
         else:
-            sys.stderr.write('Problems?: ', splitted)
+            logger_instance.debug('Problems?: <<%s>>' % (splitted,))
+            sys.stderr.write('Problems?: <<%s>>' % (splitted,))
             sys.stderr.write('\n')
 
         snp_data = { 'snp_id':splitted[0],
@@ -89,8 +95,7 @@ def read_snp_file(file_handle,mappings):
             # check if data (location) is actually set
             if snp_line_data and snp_line_data['chromosome'] and snp_line_data['location']:
                 snp_data.append(snp_line_data)
-    print('Loaded %s snps' % (len(snp_data),))
-    print('-'*80)
+    logger_instance.info('Loaded %s snps' % (len(snp_data),))
     return snp_data
     #file_handle.seek(0)
 

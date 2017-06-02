@@ -194,7 +194,7 @@ def db_insert_auto_id_bulk(db, query, data):
             db_id_end   = db_id_start + len(data) - 1 #db.insert_id()
             cursor.close()
             db.commit()
-            print('db_id_start',db_id_start,'db_id_end',db_id_end)
+            #print('db_id_start',db_id_start,'db_id_end',db_id_end)
             return db_id_start,db_id_end
     
 
