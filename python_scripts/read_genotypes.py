@@ -54,6 +54,7 @@ def snpify_line(a_line,mappings):
                 chromosome = mappings['chromosome'][splitted[1]]
             except:
                 sys.stderr.write('Error on line: %s\n' % (a_line,))
+                pass
         else:
             sys.stderr.write('Problems?: ', splitted)
             sys.stderr.write('\n')
