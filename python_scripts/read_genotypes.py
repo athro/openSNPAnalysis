@@ -142,7 +142,7 @@ if __name__ == '__main__':
     #for i in range(6000):
     # test not tested yet
     #for i in range(2198,6000):
-    for i in [881,1259]:
+    for i in [77,]:
         snp_data = read_snps_by_user(i, data_dir_genotype, mappings)
         if snp_data:
             for (filename, method, genotype) in snp_data:

@@ -202,7 +202,7 @@ def insert_all_genotypes(db_connection, hash_snp, hash_allele, id_file, genotype
 
 # -------------------------------------------------------------------------------------
 
-def check_snp_file_entries(genotype_data, hash_snp, hash_allele):
+def check_snp_file_entries(genotype_data, hash_snp, hash_allele,remove_empty_location=True):
     """
     If any snps are not already in the db, we save them into a temporary hash for later batch deposit.
     Parameters:
@@ -222,12 +222,16 @@ def check_snp_file_entries(genotype_data, hash_snp, hash_allele):
         allele1_snp = genotype_entry['allele1']
         allele2_snp = genotype_entry.get('allele2') # default None if not found 
 
-        if name_snp not in hash_snp:
-            if name_snp not in hash_snp_temp:
-                hash_snp_temp[name_snp] = (genotype_entry['chromosome'], genotype_entry['location'])
-        if not utils.has_double_key_hash(hash_allele, allele1_snp, allele2_snp):
-            if not utils.has_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp):
-                utils.insert_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp, None)
+        # igonre entry if remove_empty_location is set to true and location is actually empty (=None,0,...)
+        if not remove_empty_location and not genotype_entry['location']:
+            # if not present in the hash, insert it 
+            if name_snp not in hash_snp:
+                if name_snp not in hash_snp_temp:
+                    hash_snp_temp[name_snp] = (genotype_entry['chromosome'], genotype_entry['location'])
+            # check if alleles are already in the allele hash
+            if not utils.has_double_key_hash(hash_allele, allele1_snp, allele2_snp):
+                if not utils.has_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp):
+                    utils.insert_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp, None)
     return (hash_snp_temp,hash_allele_temp)    
 
 
@@ -257,7 +261,7 @@ if __name__ == '__main__':
     
     #for i in range(2,170):
     #for user_id in [288, 305, 339, 4070, 4088, 4170, 2566, 4120, 1004, 927,937,1497]: # 885, quick alternative: 937
-    for user_id in range(1,6000): # 885, quick alternative: 937
+    for user_id in range(70,6000): # 885, quick alternative: 937
         snp_data = read_genotypes.read_snps_by_user(user_id, data_dir_genotype, mappings)
         for (filename, method, genotype_data) in snp_data:
             # ensure that users exists in the data base - moved to here, so unneccesry users are created

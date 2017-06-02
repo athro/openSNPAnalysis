@@ -71,6 +71,7 @@ def db_select_one(db, query, data):
     try:
         cursor.execute(query, data)
     except pymysql.MySQLError:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
         err_string = "Error from MySQL:\n" + query + "\n"
         sys.stderr.write(err_string + "\n")
         logger_instance.debug(err_string)
@@ -79,7 +80,7 @@ def db_select_one(db, query, data):
         logger_instance.debug(repr(data))
 
         traceback.print_exc()
-        logger_instance.debug(traceback.format_exception())
+        logger_instance.debug(traceback.format_exception(exc_type, exc_value,exc_traceback))
 
         cursor.close()
         sys.exit(1)
@@ -97,6 +98,7 @@ def db_insert_no_auto_id(db, query, data):
     try:
         cursor.execute(query, data)
     except pymysql.MySQLError:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
         err_string = "Error from MySQL:\n" + query 
         sys.stderr.write(err_string + "\n")
         logger_instance.debug(err_string)
@@ -105,7 +107,7 @@ def db_insert_no_auto_id(db, query, data):
         logger_instance.debug(repr(data))
 
         traceback.print_exc()
-        logger_instance.debug(traceback.format_exception())
+        logger_instance.debug(traceback.format_exception(exc_type, exc_value,exc_traceback))
 
         cursor.close()
         sys.exit(1)
@@ -126,6 +128,7 @@ def db_insert_auto_id(db, query, data):
     try:
         cursor.execute(query, data)
     except pymysql.MySQLError:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
         err_string = "Error from MySQL:\n" + query 
         sys.stderr.write(err_string + "\n")
         logger_instance.debug(err_string)
@@ -134,7 +137,7 @@ def db_insert_auto_id(db, query, data):
         logger_instance.debug(repr(data))
 
         traceback.print_exc()
-        logger_instance.debug(traceback.format_exception())
+        logger_instance.debug(traceback.format_exception(exc_type, exc_value,exc_traceback))
 
         cursor.close()
         sys.exit(1)
@@ -154,6 +157,7 @@ def db_insert_auto_id_bulk(db, query, data):
     try:
         cursor.executemany(query, data)
     except pymysql.MySQLError:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
         err_string = "Error from MySQL:\n" + query 
         sys.stderr.write(err_string + "\n")
         logger_instance.debug(err_string)
@@ -162,7 +166,7 @@ def db_insert_auto_id_bulk(db, query, data):
         logger_instance.debug(repr(data))
 
         traceback.print_exc()
-        logger_instance.debug(traceback.format_exception())
+        logger_instance.debug(traceback.format_exception(exc_type, exc_value,exc_traceback))
 
         cursor.close()
         sys.exit(1)
@@ -172,6 +176,7 @@ def db_insert_auto_id_bulk(db, query, data):
         try:
             db_id_start = cursor.execute(select_last_id_query)
         except pymysql.MySQLError:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
             err_string = "Error from MySQL:\n" + select_last_id_query 
             sys.stderr.write(err_string + "\n")
             logger_instance.debug(err_string)
@@ -180,7 +185,7 @@ def db_insert_auto_id_bulk(db, query, data):
             logger_instance.debug(repr(data))
 
             traceback.print_exc()
-            logger_instance.debug(traceback.format_exception())
+            logger_instance.debug(traceback.format_exception(exc_type, exc_value,exc_traceback))
 
             cursor.close()
             sys.exit(1)
@@ -204,6 +209,7 @@ def db_insert_no_auto_id_bulk(db, query, data, batch_size=100):
         try:
             cursor.executemany(query, data_batch)
         except pymysql.MySQLError:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
             err_string = "Error from MySQL:\n" + query 
             sys.stderr.write(err_string + "\n")
             logger_instance.debug(err_string)
@@ -212,7 +218,7 @@ def db_insert_no_auto_id_bulk(db, query, data, batch_size=100):
             logger_instance.debug(repr(data))
 
             traceback.print_exc()
-            logger_instance.debug(traceback.format_exception())
+            logger_instance.debug(traceback.format_exception(exc_type, exc_value,exc_traceback))
 
             cursor.close()
             sys.exit(1)
@@ -233,6 +239,7 @@ def db_select_all(db, query, data=None):
     try:
         cursor.execute(query, data)
     except pymysql.MySQLError:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
         err_string = "Error from MySQL:\n" + query 
         sys.stderr.write(err_string + "\n")
         logger_instance.debug(err_string)
