@@ -86,7 +86,8 @@ def read_snp_file(file_handle,mappings):
             line = line.decode().strip()        
         if not line.startswith('#') and not line.startswith('RSID'):
             snp_line_data = snpify_line(line,mappings)
-            if snp_line_data:
+            # check if data (location) is actually set
+            if snp_line_data and snp_line_data['chromosome'] and snp_line_data['location']:
                 snp_data.append(snp_line_data)
     print('Loaded %s snps' % (len(snp_data),))
     print('-'*80)
