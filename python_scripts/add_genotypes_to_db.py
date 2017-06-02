@@ -222,16 +222,14 @@ def check_snp_file_entries(genotype_data, hash_snp, hash_allele,remove_empty_loc
         allele1_snp = genotype_entry['allele1']
         allele2_snp = genotype_entry.get('allele2') # default None if not found 
 
-        # igonre entry if remove_empty_location is set to true and location is actually empty (=None,0,...)
-        if remove_empty_location and not genotype_entry['location']:
-            # if not present in the hash, insert it 
-            if name_snp not in hash_snp:
-                if name_snp not in hash_snp_temp:
-                    hash_snp_temp[name_snp] = (genotype_entry['chromosome'], genotype_entry['location'])
-            # check if alleles are already in the allele hash
-            if not utils.has_double_key_hash(hash_allele, allele1_snp, allele2_snp):
-                if not utils.has_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp):
-                    utils.insert_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp, None)
+        # if not present in the hash, insert it 
+        if name_snp not in hash_snp:
+            if name_snp not in hash_snp_temp:
+                hash_snp_temp[name_snp] = (genotype_entry['chromosome'], genotype_entry['location'])
+        # check if alleles are already in the allele hash
+        if not utils.has_double_key_hash(hash_allele, allele1_snp, allele2_snp):
+            if not utils.has_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp):
+                utils.insert_double_key_hash(hash_allele_temp, allele1_snp, allele2_snp, None)
     return (hash_snp_temp,hash_allele_temp)    
 
 
