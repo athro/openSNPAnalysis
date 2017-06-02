@@ -52,10 +52,20 @@ def snpify_line(a_line,mappings):
         # save a lttle bit of length checking
         len_splitted = len(splitted)
         # translate chromosome and print error if chromosome is 0 or something unkown
-        chromosome = None 
+        chromosome = None
+        # create empty data structure
+        snp_data = None
+            
         if len_splitted >= 4 and len_splitted <= 5:
             try:
                 chromosome = mappings['chromosome'][splitted[1]]
+                snp_data = { 'snp_id':splitted[0],
+                        'chromosome':chromosome,
+                        'location':splitted[2],
+                        'allele1':splitted[3]
+                        }
+                if len_splitted > 4:
+                    snp_data['allele2'] = splitted[4]
             except:
                 sys.stderr.write('Error on line: %s\n' % (a_line,))
                 logger_instance.debug('Error on line: %s\n' % (a_line,))
@@ -64,13 +74,6 @@ def snpify_line(a_line,mappings):
             logger_instance.debug('Problems?: <<%s>>' % (splitted,))
             sys.stderr.write('Problems?: <<%s>>' % (splitted,))
             sys.stderr.write('\n')
-
-        snp_data = { 'snp_id':splitted[0],
-                     'chromosome':chromosome,
-                     'location':splitted[2],
-                     'allele1':splitted[3] }
-        if len_splitted > 4:
-            snp_data['allele2'] = splitted[4]
 
         return snp_data
     else:
