@@ -223,7 +223,7 @@ def check_snp_file_entries(genotype_data, hash_snp, hash_allele,remove_empty_loc
         allele2_snp = genotype_entry.get('allele2') # default None if not found 
 
         # igonre entry if remove_empty_location is set to true and location is actually empty (=None,0,...)
-        if not remove_empty_location and not genotype_entry['location']:
+        if remove_empty_location and not genotype_entry['location']:
             # if not present in the hash, insert it 
             if name_snp not in hash_snp:
                 if name_snp not in hash_snp_temp:
