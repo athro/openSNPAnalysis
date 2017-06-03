@@ -183,11 +183,13 @@ def insert_new_snps_into_db(db_connection, hash_snp, hash_snp_temp):
 
 def check_or_insert_user(db_connection, user_id):
     logger_instance.debug("user_id       = %s" % (user_id,))
+
     res = db_utils.db_select_one(db_connection, select_user_query, (user_id,))
     if res == None:
-        print("user_id       = %s" % (user_id,))
+        #print("user_id       = %s" % (user_id,))
         db_utils.db_insert_no_auto_id(db_connection, insert_user_query, (user_id,))
         logger_instance.debug('New user ID inserted (ID=%s)' % (user_id,))
+        return user_id
 
 def insert_all_genotypes(db_connection, hash_snp, hash_allele, id_file, genotype_data):
     logger_instance.debug("id_file       = %s" % (id_file,))
@@ -262,9 +264,15 @@ if __name__ == '__main__':
     #for user_id in [288, 305, 339, 4070, 4088, 4170, 2566, 4120, 1004, 927,937,1497]: # 885, quick alternative: 937
     for user_id in range(1,6000): # 885, quick alternative: 937
         snp_data = read_genotypes.read_snps_by_user(user_id, data_dir_genotype, mappings)
+        if not snp_data:
+            sys.stderr.write('No user ID = <<%s>>\n' % (user_id,))
+        else:
+            sys.stderr.write('Loading user ID = <<%s>>\n' % (user_id,))
+        
         for (filename, method, genotype_data) in snp_data:
             # ensure that users exists in the data base - moved to here, so unneccesry users are created
-            check_or_insert_user(db_connection, user_id)
+            u_id_check = check_or_insert_user(db_connection, user_id)
+                
             logger_instance.debug('%s\t%s\t%s' % (filename, method, len(genotype_data),))
             (hash_snp_temp, hash_allele_temp) = check_snp_file_entries(genotype_data, hash_snp, hash_allele)
             hash_allele = insert_new_alleles_into_db(db_connection, hash_allele, hash_allele_temp)
