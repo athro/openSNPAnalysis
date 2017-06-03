@@ -48,8 +48,12 @@ def snpify_line(a_line,mappings):
             splitted = a_line.split(',')
 
         # if alleles were one single string
-        if len(splitted[-1]) == 2:
-            splitted = splitted[:-1]+[splitted[-1][0],splitted[-1][1]]
+        if len(splitted[-1]) >= 2:
+            if len(splitted[-1]) == 2:
+                splitted = splitted[:-1]+[splitted[-1][0],splitted[-1][1]]
+            # something is wrong - ugly return in the middle of the method
+            else:
+                return None
 
         # save a lttle bit of length checking
         len_splitted = len(splitted)
@@ -68,10 +72,16 @@ def snpify_line(a_line,mappings):
                         }
                 if len_splitted > 4:
                     snp_data['allele2'] = splitted[4]
-                    
-            except:
-                sys.stderr.write('Error on line: %s\n' % (a_line,))
+
+                # sanity check if location really contains an integer - if not an exception is raised
+                int(snp_data['location'])
+                
+            except Exception as e:
+                # sys.stderr.write('Error on line: %s\n' % (a_line,))
+                # sys.stderr.write('snp_data: %s\n' % (snp_data,))
+                # sys.stderr.write('Exception occurred:\n %s' % (e,))
                 logger_instance.debug('Error on line: %s\n' % (a_line,))
+                snp_data = None
                 pass
         else:
             logger_instance.debug('Problems?: <<%s>>' % (splitted,))
@@ -116,7 +126,7 @@ def read_snps_by_user(user_id, data_dir_genotype, mappings):
         potential_file_names = glob.glob('%s%suser%s_*.txt' % (data_dir_genotype, os.path.sep, user_id))
         potential_file_names = [k for k in potential_file_names if not ('vcf.' in k) and not ('.IYG.' in k)]
         if potential_file_names:
-            #print(potential_file_names)
+            #sys.stderr.write('Trying to load user-id=%s (filename = <<%s>>)\n' % (user_id, potential_file_names))
             for pot_file in potential_file_names:
                 #print(pot_file)
                 try:
@@ -127,8 +137,8 @@ def read_snps_by_user(user_id, data_dir_genotype, mappings):
                 else:
                     method = pot_file.split('.')[-2] # From filename. But can we determine this?
                     return_values.append((pot_file, method, snp_data))   
-        else:
-            sys.stderr.write('No input file for user=<<%s>>\n' % (user_id,))
+        # else:
+        #     sys.stderr.write('No input file for user=<<%s>>\n' % (user_id,))
                     
     else:
         sys.stderr.write('The directory <<%s>> does not exist\n' % (data_dir_genotype,))
