@@ -35,6 +35,8 @@ def snpify_line(a_line,mappings):
     a_line = a_line.strip()
     # remove over use of """
     a_line = a_line.replace('"','')
+    # hack to deal with alleles in form of "---"
+    a_line = a_line.replace('---','--')
 
     # do not use empty lines
     if a_line:
@@ -66,6 +68,7 @@ def snpify_line(a_line,mappings):
                         }
                 if len_splitted > 4:
                     snp_data['allele2'] = splitted[4]
+                    
             except:
                 sys.stderr.write('Error on line: %s\n' % (a_line,))
                 logger_instance.debug('Error on line: %s\n' % (a_line,))
