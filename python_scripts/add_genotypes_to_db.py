@@ -262,8 +262,15 @@ if __name__ == '__main__':
     
     #for i in range(2,170):
     #for user_id in [288, 305, 339, 4070, 4088, 4170, 2566, 4120, 1004, 927,937,1497]: # 885, quick alternative: 937
-    for user_id in range(1,6000): # 885, quick alternative: 937
-        snp_data = read_genotypes.read_snps_by_user(user_id, data_dir_genotype, mappings)
+    for user_id in range(2212,6000): # 885, quick alternative: 937
+        snp_data = []
+        try:
+            snp_data = read_genotypes.read_snps_by_user(user_id, data_dir_genotype, mappings)
+        except Exception as e:
+            sys.stderr.write('A major error occured when trying to read in user ID = <<%s>>\n' % (user_id,))
+            logger_instance.info('A major error occured when trying to read in user ID = <<%s>>' % (user_id,))
+            logger_instance.debug('Exception e = \n%s\n' % (e,))
+            pass
         if not snp_data:
             sys.stderr.write('No user ID = <<%s>>\n' % (user_id,))
         else:
